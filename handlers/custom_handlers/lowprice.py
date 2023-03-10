@@ -15,7 +15,7 @@ from api.hotel_founding import hotel_founding
 from utils.info_message import info_message
 
 
-@bot.message_handler(commands=["lowprice"])
+@bot.message_handler(commands=["lowprice", "highprice"])
 def low_price(message: Message) -> None:
     logger.info(f'user_id: {message.from_user.id} | command: {message.text}')
     bot.set_state(message.from_user.id, LowPrice.start, message.chat.id)
@@ -122,12 +122,19 @@ def check_out(message: Message) -> None:
                 check_out_date = datetime.strptime(data['check_in'], '%Y-%m-%d') + timedelta(days=int(message.text))
                 data['check_out'] = check_out_date.strftime('%Y-%m-%d')
 
+                req_filter = dict()
+                req_filter['availableFilter'] = 'SHOW_AVAILABLE_ONLY'
+                if data['command'] == '/lowprice':
+                    sort = 'PRICE_LOW_TO_HIGH'
+                elif data['command'] == '/highprice':
+                    sort = 'PRICE_HIGH_TO_LOW'
+
                 data['hotel_id_list'] = hotel_founding(data['location_id'],
                                                        datetime.strptime(data['check_in'], '%Y-%m-%d'),
                                                        datetime.strptime(data['check_out'], '%Y-%m-%d'),
                                                        data['hotels_count'],
-                                                       sort='PRICE_LOW_TO_HIGH',
-                                                       req_filter={"availableFilter": "SHOW_AVAILABLE_ONLY"})
+                                                       sort=sort,
+                                                       req_filter=req_filter)
 
                 data['search_info'] = f"{data['search_info']}\n" \
                                       f"⬅ Дата выезда: {data['check_out']}"
