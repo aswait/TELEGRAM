@@ -13,11 +13,12 @@ from handlers.custom_handlers.help import help_message
 from states.start import Start
 from api.hotel_founding import hotel_founding
 from utils.info_message import info_message
+from database.create_table import db_command
 
 
 @bot.message_handler(commands=["lowprice", "highprice", "bestdeal"])
 def low_high_best(message: Message) -> None:
-    logger.info(f'user_id: {message.from_user.id} | command: {message.text}')
+    logger.info(f'user_name: {message.from_user.username} | user_id: {message.from_user.id} | command: {message.text}')
     bot.set_state(message.from_user.id, LowHighBest.start, message.chat.id)
     bot_message = bot.send_message(message.chat.id,
                                    "В каком городе ищем?".format(message.from_user.first_name))
@@ -192,6 +193,8 @@ def without_photo(call: CallbackQuery):
             bot.send_message(chat_id=call.message.chat.id,
                              text=info_message(hotel=hotel,
                                                period=data['period']))
+
+        db_command(result, call.from_user.id, data['command'])
         bot.set_state(call.from_user.id, Start.start)
         bot.send_message(chat_id=call.message.chat.id, text=help_message())
 
@@ -222,6 +225,7 @@ def photos(call: CallbackQuery):
                                                period=data['period']))
             bot.send_media_group(call.message.chat.id, hotel['images'])
 
+        db_command(result, call.from_user.id, data['command'])
         bot.set_state(call.from_user.id, Start.start)
         bot.send_message(chat_id=call.message.chat.id, text=help_message())
 
